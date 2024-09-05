@@ -1,19 +1,26 @@
 "use client";
 
 import { useChat } from "ai/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { generateRulesPrompt } from "~/lib/prompts/generateRules";
 import { api } from "~/trpc/react";
+import { useToast } from "../hooks/use-toast";
+import { useModelSettings } from "../hooks/useModelSettings"; // Add this import
 import GeneratedRules from "./GeneratedRules";
 import { useLocalStorage } from "./hooks/useLocalStorage";
+
 interface Repo {
   id: number;
   name: string;
   full_name: string;
 }
 
-export default function RepoList() {
-  const [repos, setRepos] = useState<Repo[]>([]);
+interface RepoListProps {
+  selectedModel: string;
+  // Remove anthropicApiKey and openaiApiKey from props
+}
+
+export default function RepoList({ selectedModel }: RepoListProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRepo, setSelectedRepo] = useState<Repo | null>(null);
@@ -23,21 +30,30 @@ export default function RepoList() {
     {},
   );
 
+  const { toast } = useToast();
+  const { anthropicApiKey, openaiApiKey } = useModelSettings();
   const { data, isLoading, error } = api.github.getRepos.useQuery({
     page: currentPage,
     perPage: reposPerPage,
     searchTerm,
   });
 
-  const { append, messages, isLoading: isChatLoading } = useChat();
+  const {
+    append,
+    messages,
+    isLoading: isChatLoading,
+    setMessages,
+  } = useChat({
+    api: "/api/chat",
+    body: {
+      model: selectedModel,
+      apiKey: selectedModel.startsWith("claude")
+        ? anthropicApiKey
+        : openaiApiKey,
+    },
+  });
 
   const fetchRepoContents = api.github.getRepoContents.useMutation();
-
-  useEffect(() => {
-    if (data) {
-      setRepos(data.repos);
-    }
-  }, [data]);
 
   const handleGenerateAnother = () => {
     setSelectedRepo(null);
@@ -46,15 +62,38 @@ export default function RepoList() {
   const handleRepoClick = async (repo: Repo) => {
     setSelectedRepo(repo);
 
-    // Check if rules exist in cache
-    if (rulesCache[repo.full_name]) {
-      void append({
-        role: "assistant",
-        content: rulesCache[repo.full_name] ?? "",
+    // Check if API key is set
+    if (selectedModel.startsWith("claude") && !anthropicApiKey) {
+      toast({
+        title: "Error",
+        description:
+          "Anthropic API key is not set. Please set it in the settings.",
+        variant: "destructive",
+      });
+      return;
+    } else if (selectedModel.startsWith("gpt") && !openaiApiKey) {
+      toast({
+        title: "Error",
+        description:
+          "OpenAI API key is not set. Please set it in the settings.",
+        variant: "destructive",
       });
       return;
     }
 
+    // Check if rules exist in cache
+    if (rulesCache[repo.full_name]) {
+      setMessages([
+        {
+          id: "cached",
+          role: "assistant",
+          content: rulesCache[repo.full_name] ?? "",
+        },
+      ]);
+      return;
+    }
+
+    // Fetch repo contents and generate rules only if not in cache
     const contents = await fetchRepoContents.mutateAsync({
       fullName: repo.full_name,
     });
@@ -69,10 +108,19 @@ export default function RepoList() {
 
     const prompt = generateRulesPrompt(contents, packageInfo);
 
-    await append({
-      role: "user",
-      content: prompt,
-    });
+    await append(
+      {
+        role: "user",
+        content: prompt,
+      },
+      {
+        body: {
+          apiKey: selectedModel.startsWith("claude")
+            ? anthropicApiKey
+            : openaiApiKey,
+        },
+      },
+    );
   };
 
   const handleRulesGenerated = (repoName: string, rules: string) => {
@@ -85,6 +133,9 @@ export default function RepoList() {
   const totalPages = data?.totalCount
     ? Math.ceil(data?.totalCount / reposPerPage)
     : 1;
+
+  // Use data.repos directly instead of the repos state
+  const repoList = data?.repos ?? [];
 
   return (
     <div className="w-full max-w-xl">
@@ -107,7 +158,7 @@ export default function RepoList() {
             Total repositories: {data?.totalCount}
           </p>
           <ul className="space-y-2">
-            {repos.map((repo) => (
+            {repoList.map((repo) => (
               <li
                 key={repo.id}
                 className="cursor-pointer rounded-lg bg-white/10 p-3 text-sm hover:bg-white/20"
@@ -146,7 +197,6 @@ export default function RepoList() {
         <GeneratedRules
           repo={selectedRepo}
           messages={messages}
-          isLoading={isChatLoading}
           onGenerateAnother={handleGenerateAnother}
           onRulesGenerated={handleRulesGenerated}
         />

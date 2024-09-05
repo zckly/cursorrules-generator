@@ -1,10 +1,8 @@
 import { type Message } from "ai";
-import React, { useEffect, useState } from "react";
-
+import React, { useEffect, useRef, useState } from "react";
 interface GeneratedRulesProps {
   repo: { full_name: string };
   messages: Message[];
-  isLoading: boolean;
   onGenerateAnother: () => void;
   onRulesGenerated: (repoName: string, rules: string) => void;
 }
@@ -12,11 +10,12 @@ interface GeneratedRulesProps {
 const GeneratedRules: React.FC<GeneratedRulesProps> = ({
   repo,
   messages,
-  isLoading,
   onGenerateAnother,
   onRulesGenerated,
 }) => {
   const [isCopied, setIsCopied] = useState(false);
+  const hasGeneratedRef = useRef(false);
+
   const generatedRules =
     messages[messages.length - 1]?.role === "assistant"
       ? messages[messages.length - 1]?.content
@@ -31,25 +30,26 @@ const GeneratedRules: React.FC<GeneratedRulesProps> = ({
 
   useEffect(() => {
     if (generatedRules) {
-      onRulesGenerated(repo.full_name, generatedRules);
+      // Use a ref to track if rules have been generated
+      if (!hasGeneratedRef.current) {
+        onRulesGenerated(repo.full_name, generatedRules);
+        hasGeneratedRef.current = true;
+      }
     }
   }, [generatedRules, repo.full_name, onRulesGenerated]);
 
   return (
     <div className="mt-8">
-      {!isLoading && (
-        <>
-          <h3 className="mb-2 font-bold">
-            Generated .cursorrules for {repo.full_name}
-          </h3>
-          <button
-            className="mt-2 rounded bg-gray-700 px-4 py-2 text-sm"
-            onClick={onGenerateAnother}
-          >
-            Generate another
-          </button>
-        </>
-      )}
+      <>
+        <h3 className="mb-2 font-bold">.cursorrules for {repo.full_name}</h3>
+        <button
+          className="mt-2 rounded bg-gray-700 px-4 py-2 text-sm"
+          onClick={onGenerateAnother}
+        >
+          Generate another
+        </button>
+      </>
+
       <div className="relative mt-4 rounded bg-gray-900 p-4">
         <button
           onClick={handleCopy}
@@ -57,7 +57,7 @@ const GeneratedRules: React.FC<GeneratedRulesProps> = ({
         >
           {isCopied ? "Copied!" : "Copy"}
         </button>
-        <div className="whitespace-pre-wrap text-sm text-white">
+        <div className="custom-scrollbar h-[600px] overflow-y-auto whitespace-pre-wrap text-sm text-white">
           {generatedRules ?? "No rules generated yet."}
         </div>
       </div>
