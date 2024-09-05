@@ -1,3 +1,5 @@
+// Credit for the example .cursorrules file goes to https://github.com/midday-ai/v1
+
 export function generateRulesPrompt(
   contents: { files: string[] },
   packageInfo: string,
