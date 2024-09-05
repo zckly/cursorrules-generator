@@ -1,29 +1,50 @@
-# Create T3 App
+# .cursorrules Generator
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+This is a [T3 Stack](https://create.t3.gg/) project that generates .cursorrules for your GitHub repositories.
 
-## What's next? How do I make an app with this?
+## What is .cursorrules Generator?
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+.cursorrules Generator is an application that automatically creates .cursorrules files for your GitHub repositories. These files are used by the Cursor IDE to provide custom rules and settings for your projects.
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+## Technologies Used
+
+This project is built using the T3 Stack, which includes:
 
 - [Next.js](https://nextjs.org)
 - [NextAuth.js](https://next-auth.js.org)
 - [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
 - [Tailwind CSS](https://tailwindcss.com)
 - [tRPC](https://trpc.io)
 
+## How to Run
+
+To run this project locally, you'll need to set up a few things:
+
+1. Clone the repository
+2. Install dependencies with `npm install` or `yarn install`
+3. Set up your environment variables:
+   - `ANTHROPIC_API_KEY` or `OPENAI_API_KEY`: For AI-powered rule generation
+   - `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`: For GitHub authentication
+4. Run the development server with `npm run dev` or `yarn dev`
+
+## Features
+
+- GitHub authentication
+- Fetches user's GitHub repositories
+- Generates .cursorrules based on repository contents
+- Caches generated rules for quick access
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
 ## Learn More
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+To learn more about the T3 Stack and the technologies used in this project, check out the following resources:
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+- [T3 Stack Documentation](https://create.t3.gg/)
+- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available)
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+## Deployment
 
-## How do I deploy this?
-
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+This project can be deployed on platforms like Vercel, Netlify, or using Docker. Make sure to set up the required environment variables on your deployment platform.
