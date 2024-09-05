@@ -3,7 +3,6 @@
 import { toast } from "~/hooks/use-toast";
 /* eslint-disable react/no-unescaped-entities */
 import { DialogClose } from "@radix-ui/react-dialog";
-import { useModelSettings } from "../hooks/useModelSettings";
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -23,17 +22,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-export function SettingsDialog() {
-  const {
-    selectedModel,
-    setSelectedModel,
-    anthropicApiKey,
-    setAnthropicApiKey,
-    openaiApiKey,
-    setOpenaiApiKey,
-    saveSettings,
-  } = useModelSettings();
 
+interface SettingsDialogProps {
+  selectedModel: string;
+  setSelectedModel: (model: string) => void;
+  anthropicApiKey: string;
+  setAnthropicApiKey: (key: string) => void;
+  openaiApiKey: string;
+  setOpenaiApiKey: (key: string) => void;
+  saveSettings: () => void;
+}
+
+export function SettingsDialog({
+  selectedModel,
+  setSelectedModel,
+  anthropicApiKey,
+  setAnthropicApiKey,
+  openaiApiKey,
+  setOpenaiApiKey,
+  saveSettings,
+}: SettingsDialogProps) {
   const handleSave = () => {
     saveSettings();
     toast({

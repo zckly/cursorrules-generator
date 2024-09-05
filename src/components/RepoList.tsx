@@ -17,10 +17,15 @@ interface Repo {
 
 interface RepoListProps {
   selectedModel: string;
-  // Remove anthropicApiKey and openaiApiKey from props
+  anthropicApiKey: string;
+  openaiApiKey: string;
 }
 
-export default function RepoList({ selectedModel }: RepoListProps) {
+export default function RepoList({
+  selectedModel,
+  anthropicApiKey,
+  openaiApiKey,
+}: RepoListProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRepo, setSelectedRepo] = useState<Repo | null>(null);
@@ -31,7 +36,10 @@ export default function RepoList({ selectedModel }: RepoListProps) {
   );
 
   const { toast } = useToast();
-  const { anthropicApiKey, openaiApiKey } = useModelSettings();
+  const {
+    anthropicApiKey: anthropicApiKeyState,
+    openaiApiKey: openaiApiKeyState,
+  } = useModelSettings();
   const { data, isLoading, error } = api.github.getRepos.useQuery({
     page: currentPage,
     perPage: reposPerPage,
@@ -48,8 +56,8 @@ export default function RepoList({ selectedModel }: RepoListProps) {
     body: {
       model: selectedModel,
       apiKey: selectedModel.startsWith("claude")
-        ? anthropicApiKey
-        : openaiApiKey,
+        ? anthropicApiKeyState
+        : openaiApiKeyState,
     },
   });
 
@@ -63,7 +71,7 @@ export default function RepoList({ selectedModel }: RepoListProps) {
     setSelectedRepo(repo);
 
     // Check if API key is set
-    if (selectedModel.startsWith("claude") && !anthropicApiKey) {
+    if (selectedModel.startsWith("claude") && !anthropicApiKeyState) {
       toast({
         title: "Error",
         description:
@@ -71,7 +79,7 @@ export default function RepoList({ selectedModel }: RepoListProps) {
         variant: "destructive",
       });
       return;
-    } else if (selectedModel.startsWith("gpt") && !openaiApiKey) {
+    } else if (selectedModel.startsWith("gpt") && !openaiApiKeyState) {
       toast({
         title: "Error",
         description:
@@ -116,8 +124,8 @@ export default function RepoList({ selectedModel }: RepoListProps) {
       {
         body: {
           apiKey: selectedModel.startsWith("claude")
-            ? anthropicApiKey
-            : openaiApiKey,
+            ? anthropicApiKeyState
+            : openaiApiKeyState,
         },
       },
     );
